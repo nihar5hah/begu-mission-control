@@ -18,7 +18,8 @@ import {
   Settings,
   Menu,
   X,
-  Trash2
+  Trash2,
+  MessageCircle
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,16 @@ interface InboxItem {
   from: string;
   priority: string;
   snippet: string;
+}
+
+interface WhatsAppTask {
+  id: string;
+  title: string;
+  description: string | null;
+  status: string;
+  category: string;
+  tags: string[];
+  createdAt: string;
 }
 
 // --- Components ---
@@ -161,6 +172,8 @@ export default function MissionControl() {
   const [selectedInboxItem, setSelectedInboxItem] = useState<InboxItem | null>(null);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isInboxModalOpen, setIsInboxModalOpen] = useState(false);
+  const [whatsappTasks, setWhatsappTasks] = useState<WhatsAppTask[]>([]);
+  const [isLoadingWhatsApp, setIsLoadingWhatsApp] = useState(false);
 
   const inboxIntelWithSnippet: InboxItem[] = siteConfig.inboxIntel.map(item => ({
     ...item,
@@ -180,6 +193,25 @@ export default function MissionControl() {
   const handleClearLogs = () => {
     console.log("Logs cleared");
   };
+
+  const fetchWhatsAppTasks = async () => {
+    setIsLoadingWhatsApp(true);
+    try {
+      const response = await fetch('/api/whatsapp-tasks');
+      if (response.ok) {
+        const tasks = await response.json();
+        setWhatsappTasks(tasks);
+      }
+    } catch (error) {
+      console.error('Failed to fetch WhatsApp tasks:', error);
+    } finally {
+      setIsLoadingWhatsApp(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWhatsAppTasks();
+  }, []);
 
   return (
     <div className="min-h-screen bg-black text-white relative industrial-grid overflow-x-hidden">
@@ -501,6 +533,49 @@ export default function MissionControl() {
                   </motion.div>
                 ))}
               </div>
+            </div>
+
+            {/* Social Intel - WhatsApp */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-black uppercase tracking-tighter flex items-center gap-2">
+                  <MessageCircle size={18} className="text-emerald-500" /> Social_Intel
+                </h2>
+                <Badge variant="outline">WhatsApp</Badge>
+              </div>
+              {isLoadingWhatsApp ? (
+                <div className="text-[10px] text-zinc-500 font-bold uppercase animate-pulse">
+                  Syncing messages...
+                </div>
+              ) : whatsappTasks.length === 0 ? (
+                <div className="text-[10px] text-zinc-500 font-bold uppercase">
+                  No actionable messages
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {whatsappTasks.filter(t => t.category === 'social' && t.tags?.includes('whatsapp')).slice(0, 5).map((task, i) => (
+                    <motion.div
+                      key={task.id}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      whileHover={{ x: 4 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="p-4 bg-zinc-900/30 border border-zinc-800 flex gap-4 cursor-pointer group transition-all hover:border-emerald-500/50"
+                    >
+                      <div className="w-1 h-10 shrink-0 bg-emerald-500 group-hover:bg-emerald-400 transition-colors" />
+                      <div className="space-y-1 min-w-0">
+                        <div className="text-xs font-black uppercase group-hover:text-emerald-500 transition-colors truncate">
+                          {task.title.replace(/💬\s*/, '')}
+                        </div>
+                        <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+                          {task.tags?.find((t: string) => t.includes('s.whatsapp.net'))?.replace('@s.whatsapp.net', '') || 'WhatsApp'}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Barça Section */}
