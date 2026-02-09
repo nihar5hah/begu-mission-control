@@ -2,27 +2,78 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #09090b;
-  --foreground: #fafafa;
-  --primary: #3b82f6;
-  --secondary: #27272a;
-  --accent: #10b981;
-  --muted: #71717a;
-  --border: #27272a;
+@layer base {
+  :root {
+    --background: oklch(0.05 0 0);
+    --foreground: oklch(0.98 0.01 240);
+    
+    --card: oklch(0.12 0.01 240);
+    --card-foreground: oklch(0.98 0.01 240);
+    
+    --primary: oklch(0.65 0.2 250); /* Electric Blue */
+    --primary-foreground: oklch(0.98 0.01 240);
+    
+    --accent: oklch(0.7 0.25 150); /* Cyber Lime */
+    --accent-foreground: oklch(0.05 0 0);
+    
+    --border: oklch(0.2 0.02 240);
+    --input: oklch(0.2 0.02 240);
+    --ring: oklch(0.65 0.2 250);
+  }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: 'Geist Mono', 'JetBrains Mono', monospace;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary/30 selection:text-primary;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+  }
 }
 
-.glow {
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+/* Custom Utilities */
+.glass {
+  @apply bg-card/40 backdrop-blur-md border border-white/5;
 }
 
-.grid-bg {
-  background-image: radial-gradient(#27272a 1px, transparent 1px);
-  background-size: 24px 24px;
+.glow-primary {
+  box-shadow: 0 0 30px -10px oklch(0.65 0.2 250 / 0.4);
+}
+
+.glow-accent {
+  box-shadow: 0 0 30px -10px oklch(0.7 0.25 150 / 0.4);
+}
+
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.industrial-grid {
+  background-image: 
+    linear-gradient(to right, oklch(1 0 0 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(1 0 0 / 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.terminal-header {
+  @apply bg-zinc-900 border-b border-zinc-800 px-4 py-2 flex items-center gap-2;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-background;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-zinc-800 rounded-full hover:bg-zinc-700 transition-colors;
 }
