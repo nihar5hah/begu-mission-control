@@ -1,0 +1,150 @@
+import { NextResponse } from 'next/server';
+
+const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports';
+const BARCELONA_TEAM_ID = '83';
+const LA_LIGA_CODE = 'esp.1';
+
+interface ESPNEvent {
+  id: string;
+  name: string;
+  shortName: string;
+  date: string;
+  competitions: Array<{
+    id: string;
+    venue?: {
+      fullName?: string;
+    };
+    competitors: Array<{
+      id: string;
+      homeAway: string;
+      team: {
+        id: string;
+        displayName: string;
+        shortDisplayName: string;
+      };
+      score?: string;
+    }>;
+    status: {
+      type: {
+        id: string;
+        name: string;
+        state: string;
+        completed: boolean;
+        description: string;
+      };
+    };
+  }>;
+}
+
+interface StandingsTeam {
+  team: {
+    id: string;
+    displayName: string;
+  };
+  stats: Array<{
+    name: string;
+    displayValue: string;
+    value: number;
+  }>;
+}
+
+async function fetchESPN(endpoint: string) {
+  const url = `${ESPN_BASE}/${endpoint}`;
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+    },
+    next: { revalidate: 300 } // Cache for 5 minutes
+  });
+
+  if (!response.ok) {
+    throw new Error(`ESPN API error: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function GET() {
+  try {
+    // Fetch Barcelona's schedule
+    const scheduleData = await fetchESPN(`soccer/${LA_LIGA_CODE}/teams/${BARCELONA_TEAM_ID}/schedule`);
+
+    // Fetch La Liga standings
+    const standingsData = await fetchESPN(`soccer/${LA_LIGA_CODE}/standings`);
+
+    // Process schedule to get upcoming fixtures
+    const events: ESPNEvent[] = scheduleData.events || [];
+    const now = new Date();
+
+    const upcomingFixtures = events
+      .filter((event: ESPNEvent) => {
+        const eventDate = new Date(event.date);
+        const isUpcoming = eventDate > now;
+        const competition = event.competitions?.[0];
+        const isNotCompleted = !competition?.status?.type?.completed;
+        return isUpcoming && isNotCompleted;
+      })
+      .slice(0, 5)
+      .map((event: ESPNEvent) => {
+        const competition = event.competitions[0];
+        const homeTeam = competition.competitors.find(c => c.homeAway === 'home');
+        const awayTeam = competition.competitors.find(c => c.homeAway === 'away');
+
+        return {
+          id: event.id,
+          competition: 'La Liga',
+          homeTeam: homeTeam?.team.displayName || 'TBD',
+          awayTeam: awayTeam?.team.displayName || 'TBD',
+          date: new Date(event.date).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+          }),
+          venue: competition.venue?.fullName || 'TBD',
+          status: 'upcoming' as const,
+        };
+      });
+
+    // Get next fixture
+    const nextFixture = upcomingFixtures[0] || null;
+
+    // Process standings
+    const standingsEntries = standingsData.children?.[0]?.standings?.entries || [];
+    const standings = standingsEntries
+      .slice(0, 5)
+      .map((entry: StandingsTeam, index: number) => {
+        const stats = entry.stats || [];
+        const getStatValue = (name: string) => {
+          const stat = stats.find(s => s.name === name);
+          return stat ? stat.value : 0;
+        };
+
+        return {
+          pos: index + 1,
+          team: entry.team.displayName,
+          played: getStatValue('gamesPlayed'),
+          won: getStatValue('wins'),
+          drawn: getStatValue('ties'),
+          lost: getStatValue('losses'),
+          points: getStatValue('points'),
+        };
+      });
+
+    return NextResponse.json({
+      nextFixture,
+      upcomingFixtures,
+      standings,
+      lastUpdated: new Date().toISOString(),
+    });
+
+  } catch (error) {
+    console.error('Error fetching ESPN data:', error);
+    return NextResponse.json(
+      {
+        error: 'Failed to fetch sports data',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
+  }
+}
