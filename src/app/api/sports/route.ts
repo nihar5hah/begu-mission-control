@@ -81,19 +81,6 @@ export async function GET() {
     const now = new Date();
 
     const upcomingFixtures = events
-      .filter((event: ESPNEvent) => {
-        const eventDate = new Date(event.date);
-        // During development/testing, show all matches if no future matches found
-        // or keep filter if we want strictly upcoming. 
-        // Let's broaden it to include matches from the last 48 hours so it's not empty if a match just happened.
-        const twoDaysAgo = new Date();
-        twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-        
-        const competition = event.competitions?.[0];
-        const isNotCompleted = !competition?.status?.type?.completed;
-        return eventDate > twoDaysAgo; 
-      })
-      .slice(0, 5)
       .map((event: ESPNEvent) => {
         const competition = event.competitions[0];
         const homeTeam = competition.competitors.find(c => c.homeAway === 'home');
@@ -110,9 +97,14 @@ export async function GET() {
             year: 'numeric'
           }),
           venue: competition.venue?.fullName || 'TBD',
-          status: 'upcoming' as const,
+          status: (competition.status?.type?.completed ? 'finished' : 
+                   competition.status?.type?.state === 'in' ? 'live' : 'upcoming') as any,
+          rawDate: new Date(event.date)
         };
-      });
+      })
+      .filter(f => f.rawDate > new Date(Date.now() - 24 * 60 * 60 * 1000)) // Filter here after map
+      .sort((a, b) => a.rawDate.getTime() - b.rawDate.getTime())
+      .slice(0, 5);
 
     // Get next fixture
     const nextFixture = upcomingFixtures[0] || null;
