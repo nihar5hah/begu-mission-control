@@ -83,10 +83,15 @@ export async function GET() {
     const upcomingFixtures = events
       .filter((event: ESPNEvent) => {
         const eventDate = new Date(event.date);
-        const isUpcoming = eventDate > now;
+        // During development/testing, show all matches if no future matches found
+        // or keep filter if we want strictly upcoming. 
+        // Let's broaden it to include matches from the last 48 hours so it's not empty if a match just happened.
+        const twoDaysAgo = new Date();
+        twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+        
         const competition = event.competitions?.[0];
         const isNotCompleted = !competition?.status?.type?.completed;
-        return isUpcoming && isNotCompleted;
+        return eventDate > twoDaysAgo; 
       })
       .slice(0, 5)
       .map((event: ESPNEvent) => {
