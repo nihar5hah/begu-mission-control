@@ -116,12 +116,12 @@ export async function GET() {
 
     // Separate finished and upcoming
     const upcomingFixtures = barcelonaMatches
-      .filter(m => m.status !== 'finished' || m.rawDate > new Date(Date.now() - 1 * 60 * 1000)) // Filter out finished unless it's basically NOW
+      .filter(m => m.status !== 'finished') 
       .sort((a, b) => a.rawDate.getTime() - b.rawDate.getTime())
       .slice(0, 5);
 
     // Get next fixture (the earliest upcoming one)
-    const nextFixture = upcomingFixtures.find(m => m.status !== 'finished') || upcomingFixtures[0] || null;
+    const nextFixture = upcomingFixtures[0] || null;
 
     // Process standings
     const standingsEntries = standingsData.children?.[0]?.standings?.entries || [];
