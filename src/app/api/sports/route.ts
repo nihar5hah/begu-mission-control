@@ -85,7 +85,6 @@ export async function GET() {
       ...(upcomingMonthScoreboard.events || [])
     ];
 
-    // Filter for Barcelona matches and format
     const barcelonaMatches = allEvents
       .filter((event: any) => {
         const competition = event.competitions?.[0];
@@ -107,34 +106,21 @@ export async function GET() {
             day: 'numeric',
             year: 'numeric'
           }),
-          venue: competition.venue?.fullName || 'TBD',
+          venue: competition.venue?.fullName || 'Spotify Camp Nou',
           status: (competition.status?.type?.completed ? 'finished' : 
                    competition.status?.type?.state === 'in' ? 'live' : 'upcoming') as any,
           rawDate: new Date(event.date)
         };
-      });
+      })
+      .filter((v, i, a) => a.findIndex(t => t.id === v.id) === i); // Deduplicate
 
-    // If no current matches found, fallback to hardcoded upcoming for demo if needed,
-    // but better to try and find from schedule. 
-    // Let's add a few future placeholders if results are empty to keep the UI from looking broken.
-    if (barcelonaMatches.length === 0) {
-      barcelonaMatches.push({
-        id: 'next-1',
-        competition: 'La Liga',
-        homeTeam: 'Girona',
-        awayTeam: 'Barcelona',
-        date: 'Feb 16, 2026',
-        venue: 'Estadi Montilivi',
-        status: 'upcoming',
-        rawDate: new Date('2026-02-16T20:00Z')
-      });
-    }
-
+    // Separate finished and upcoming
     const upcomingFixtures = barcelonaMatches
+      .filter(m => m.status !== 'finished' || m.rawDate > new Date(Date.now() - 12 * 60 * 60 * 1000))
       .sort((a, b) => a.rawDate.getTime() - b.rawDate.getTime())
       .slice(0, 5);
 
-    // Get next fixture
+    // Get next fixture (the earliest upcoming one)
     const nextFixture = upcomingFixtures[0] || null;
 
     // Process standings
