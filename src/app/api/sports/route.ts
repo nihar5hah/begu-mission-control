@@ -89,7 +89,8 @@ export async function GET() {
     const barcelonaMatches = allEvents
       .filter((event: any) => {
         const competition = event.competitions?.[0];
-        return competition?.competitors.some((c: any) => c.team.id === BARCELONA_TEAM_ID);
+        // Team ID 83 is FC Barcelona
+        return competition?.competitors.some((c: any) => c.team.id === BARCELONA_TEAM_ID || c.id === BARCELONA_TEAM_ID);
       })
       .map((event: any) => {
         const competition = event.competitions[0];
