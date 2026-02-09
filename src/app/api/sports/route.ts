@@ -69,8 +69,12 @@ export async function GET() {
     // Fetch Barcelona's schedule
     const scheduleData = await fetchESPN(`soccer/${LA_LIGA_CODE}/teams/${BARCELONA_TEAM_ID}/schedule`);
 
-    // Fetch La Liga standings
-    const standingsData = await fetchESPN(`soccer/${LA_LIGA_CODE}/standings`);
+    // Fetch La Liga standings - NOTE: Using v2 for standings as site.api v1/standings often returns empty
+    const standingsResponse = await fetch(`https://site.api.espn.com/apis/v2/sports/soccer/${LA_LIGA_CODE}/standings`, {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+      next: { revalidate: 300 }
+    });
+    const standingsData = await standingsResponse.json();
 
     // Process schedule to get upcoming fixtures
     const events: ESPNEvent[] = scheduleData.events || [];
