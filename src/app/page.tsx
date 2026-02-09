@@ -3,28 +3,26 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Zap, 
-  Activity, 
-  Mail, 
-  Trophy, 
+  ArrowUpRight, 
   Layers, 
   Cpu, 
-  ArrowUpRight, 
   CheckCircle2, 
-  Terminal as TerminalIcon,
+  Activity, 
   Globe,
   Bell,
   Search,
-  Settings,
   Menu,
   X,
   Trash2,
-  MessageCircle
+  MessageCircle,
+  Mail,
+  Trophy
 } from "lucide-react";
+import Link from "next/link";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 import { Modal } from "@/components/ui/modal";
-import { SlideOver } from "@/components/ui/modal";
+import { DesktopSidebar, MobileSidebar, MobileMenuButton } from "@/components/Sidebar";
 
 interface Project {
   title: string;
@@ -51,8 +49,6 @@ interface WhatsAppTask {
   createdAt: string;
 }
 
-// --- Components ---
-
 const Badge = ({ children, variant = "default", className }: { children: React.ReactNode, variant?: "default" | "accent" | "outline", className?: string }) => {
   const styles = {
     default: "bg-primary/10 text-primary border-primary/20",
@@ -66,28 +62,34 @@ const Badge = ({ children, variant = "default", className }: { children: React.R
   );
 };
 
-const Card = ({ children, className, glow = false, onClick }: { children: React.ReactNode, className?: string, glow?: boolean, onClick?: () => void }) => (
-  <motion.div 
-    className={cn(
-      "relative group bg-zinc-900/30 border border-zinc-800 p-6 transition-all",
-      glow && "glow-primary",
-      "hover:bg-zinc-800/40 hover:border-zinc-700 cursor-pointer",
-      className
-    )}
-    onClick={onClick}
-    whileHover={{ scale: 1.01 }}
-    whileTap={{ scale: 0.99 }}
-  >
+const Card = ({ children, className, glow = false, onClick, href }: { children: React.ReactNode, className?: string, glow?: boolean, onClick?: () => void, href?: string }) => {
+  const content = (
     <motion.div 
-      className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity"
-      initial={{ opacity: 0 }}
-      whileHover={{ opacity: 1 }}
+      className={cn(
+        "relative group bg-zinc-900/30 border border-zinc-800 p-6 transition-all",
+        glow && "glow-primary",
+        "hover:bg-zinc-800/40 hover:border-zinc-700 cursor-pointer",
+        className
+      )}
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
     >
-      <ArrowUpRight size={14} className="text-primary" />
+      <motion.div 
+        className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+        initial={{ opacity: 0 }}
+        whileHover={{ opacity: 1 }}
+      >
+        <ArrowUpRight size={14} className="text-primary" />
+      </motion.div>
+      {children}
     </motion.div>
-    {children}
-  </motion.div>
-);
+  );
+
+  if (href) {
+    return <Link href={href}>{content}</Link>;
+  }
+  return <div onClick={onClick}>{content}</div>;
+};
 
 const Terminal = ({ onClear }: { onClear: () => void }) => {
   const [logs, setLogs] = useState<string[]>([]);
@@ -217,123 +219,11 @@ export default function MissionControl() {
     <div className="min-h-screen bg-black text-white relative industrial-grid overflow-x-hidden">
       <div className="grain-overlay" />
       
-      {/* Mobile Menu - SlideOver */}
-      <SlideOver 
-        isOpen={isMenuOpen} 
-        onClose={() => setIsMenuOpen(false)}
-        position="left"
-      >
-        <div className="space-y-6">
-          <div className="flex items-center gap-3 pb-4 border-b border-zinc-800">
-            <div className="p-2 bg-primary text-white rounded-lg glow-primary">
-              <Zap size={20} />
-            </div>
-            <div>
-              <div className="text-sm font-black uppercase tracking-tighter">Mission_Control</div>
-              <div className="text-[10px] text-zinc-500">v1.0.0</div>
-            </div>
-          </div>
-          
-          <nav className="space-y-2">
-            <motion.button
-              whileHover={{ x: 4 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full flex items-center gap-3 px-3 py-3 text-sm font-bold text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-sm transition-all"
-            >
-              <Globe size={16} />
-              Dashboard
-            </motion.button>
-            <motion.button
-              whileHover={{ x: 4 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full flex items-center gap-3 px-3 py-3 text-sm font-bold text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-sm transition-all"
-            >
-              <Activity size={16} />
-              Projects
-            </motion.button>
-            <motion.button
-              whileHover={{ x: 4 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full flex items-center gap-3 px-3 py-3 text-sm font-bold text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-sm transition-all"
-            >
-              <Mail size={16} />
-              Inbox Intel
-            </motion.button>
-            <motion.button
-              whileHover={{ x: 4 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full flex items-center gap-3 px-3 py-3 text-sm font-bold text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-sm transition-all"
-            >
-              <Trophy size={16} />
-              Sports
-            </motion.button>
-          </nav>
-          
-          <div className="pt-4 border-t border-zinc-800">
-            <motion.button
-              whileHover={{ x: 4 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full flex items-center gap-3 px-3 py-3 text-sm font-bold text-zinc-500 hover:text-white hover:bg-zinc-800/50 rounded-sm transition-all"
-            >
-              <Settings size={16} />
-              Settings
-            </motion.button>
-          </div>
-        </div>
-      </SlideOver>
-
-      {/* Side Navigation */}
-      <nav className="fixed left-0 top-0 bottom-0 w-16 border-r border-zinc-800 bg-black/50 backdrop-blur-xl z-40 hidden md:flex flex-col items-center py-8 justify-between">
-        <div className="space-y-8">
-          <motion.div 
-            className="p-2 bg-primary text-white rounded-lg glow-primary cursor-pointer"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Zap size={20} />
-          </motion.div>
-          <div className="flex flex-col gap-6 text-zinc-500">
-            <motion.button 
-              whileHover={{ scale: 1.1, color: "white" }}
-              whileTap={{ scale: 0.9 }}
-              className="transition-colors cursor-pointer"
-            >
-              <Globe size={20} />
-            </motion.button>
-            <motion.button 
-              whileHover={{ scale: 1.1, color: "white" }}
-              whileTap={{ scale: 0.9 }}
-              className="transition-colors cursor-pointer"
-            >
-              <Activity size={20} />
-            </motion.button>
-            <motion.button 
-              whileHover={{ scale: 1.1, color: "white" }}
-              whileTap={{ scale: 0.9 }}
-              className="transition-colors cursor-pointer text-blue-500"
-            >
-              <Mail size={20} />
-            </motion.button>
-            <motion.button 
-              whileHover={{ scale: 1.1, color: "white" }}
-              whileTap={{ scale: 0.9 }}
-              className="transition-colors cursor-pointer"
-            >
-              <Trophy size={20} />
-            </motion.button>
-          </div>
-        </div>
-        <motion.button 
-          whileHover={{ scale: 1.1, color: "white" }}
-          whileTap={{ scale: 0.9 }}
-          className="text-zinc-600 hover:text-white transition-colors cursor-pointer"
-        >
-          <Settings size={20} />
-        </motion.button>
-      </nav>
+      <DesktopSidebar />
+      <MobileMenuButton isOpen={isMenuOpen} onToggle={() => setIsMenuOpen(!isMenuOpen)} />
+      <MobileSidebar isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
 
       <div className="md:ml-16">
-        {/* Top Navbar */}
         <div className="sticky top-0 w-full border-b border-zinc-800 bg-black/60 backdrop-blur-xl z-30">
           <div className="max-w-7xl mx-auto h-14 px-6 flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -364,19 +254,10 @@ export default function MissionControl() {
               >
                 <Bell size={18} />
               </motion.button>
-              <motion.div 
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="md:hidden cursor-pointer text-zinc-400 hover:text-white"
-              >
-                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-              </motion.div>
             </div>
           </div>
         </div>
 
-        {/* Hero Section */}
         <section className="relative px-6 py-12 md:py-24 max-w-7xl mx-auto overflow-hidden">
           <div className="absolute top-0 right-0 -mr-24 -mt-24 w-96 h-96 bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
           
@@ -394,20 +275,24 @@ export default function MissionControl() {
                 {siteConfig.hero.subtitle}
               </p>
               <div className="flex flex-wrap gap-4 pt-4">
-                <motion.button 
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="bg-primary hover:bg-blue-600 text-white font-black uppercase tracking-widest text-xs px-8 py-4 rounded-sm transition-all glow-primary flex items-center gap-2"
-                >
-                  Launch_Module <ArrowUpRight size={14} />
-                </motion.button>
-                <motion.button 
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="border border-zinc-800 hover:bg-zinc-900 text-zinc-400 font-black uppercase tracking-widest text-xs px-8 py-4 rounded-sm transition-all"
-                >
-                  Documentation
-                </motion.button>
+                <Link href="/projects">
+                  <motion.button 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="bg-primary hover:bg-blue-600 text-white font-black uppercase tracking-widest text-xs px-8 py-4 rounded-sm transition-all glow-primary flex items-center gap-2"
+                  >
+                    View Projects <ArrowUpRight size={14} />
+                  </motion.button>
+                </Link>
+                <Link href="/docs">
+                  <motion.button 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="border border-zinc-800 hover:bg-zinc-900 text-zinc-400 hover:text-white font-black uppercase tracking-widest text-xs px-8 py-4 rounded-sm transition-all"
+                  >
+                    Documentation
+                  </motion.button>
+                </Link>
               </div>
             </motion.div>
 
@@ -421,41 +306,51 @@ export default function MissionControl() {
           </div>
         </section>
 
-        {/* Stats Strip */}
         <section className="px-6 pb-20 max-w-7xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {siteConfig.stats.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + (i * 0.1) }}
-                className="bg-zinc-900/40 border-l border-t border-zinc-800 p-6 relative overflow-hidden group cursor-pointer"
-                whileHover={{ y: -2 }}
-              >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 blur-3xl rounded-full opacity-5 group-hover:opacity-10 transition-opacity" />
-                <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-2">{stat.label}</div>
-                <div className="text-4xl font-black text-white">{stat.value}</div>
-                <div className="mt-4 flex items-center gap-2">
-                  <Badge variant={stat.trend === "up" ? "accent" : "outline"}>
-                    {stat.trend === "up" ? "+12.5%" : "STABLE"}
-                  </Badge>
-                  <span className="text-[10px] text-zinc-500 font-bold uppercase">{stat.subtext}</span>
-                </div>
-              </motion.div>
+              <Link href="/stats" key={stat.label}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + (i * 0.1) }}
+                  className="bg-zinc-900/40 border-l border-t border-zinc-800 p-6 relative overflow-hidden group cursor-pointer"
+                  whileHover={{ y: -2 }}
+                >
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 blur-3xl rounded-full opacity-5 group-hover:opacity-10 transition-opacity" />
+                  <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-2">{stat.label}</div>
+                  <div className="text-4xl font-black text-white">{stat.value}</div>
+                  <div className="mt-4 flex items-center gap-2">
+                    <Badge variant={stat.trend === "up" ? "accent" : "outline"}>
+                      {stat.trend === "up" ? "+12.5%" : "STABLE"}
+                    </Badge>
+                    <span className="text-[10px] text-zinc-500 font-bold uppercase">{stat.subtext}</span>
+                  </div>
+                </motion.div>
+              </Link>
             ))}
           </div>
         </section>
 
-        {/* Workspace Section */}
         <section className="px-6 py-20 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12">
           
           <div className="lg:col-span-2 space-y-8">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-blue-500/10 text-blue-500 rounded border border-blue-500/20">
-                <Layers size={20} />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-blue-500/10 text-blue-500 rounded border border-blue-500/20">
+                  <Layers size={20} />
+                </div>
+                <h2 className="text-2xl font-black uppercase tracking-tighter">Project_Grid</h2>
               </div>
-              <h2 className="text-2xl font-black uppercase tracking-tighter">Project_Grid</h2>
+              <Link href="/projects">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="text-xs font-black uppercase tracking-wider text-zinc-400 hover:text-white transition-colors flex items-center gap-2"
+                >
+                  View All <ArrowUpRight size={14} />
+                </motion.button>
+              </Link>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -496,15 +391,15 @@ export default function MissionControl() {
             </div>
           </div>
 
-          {/* Right Sidebar */}
           <div className="space-y-12">
             
-            {/* Inbox Intelligence */}
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-black uppercase tracking-tighter flex items-center gap-2">
-                  <Mail size={18} className="text-blue-500" /> Inbox_Intel
-                </h2>
+                <Link href="/inbox" className="flex items-center gap-2 hover:text-primary transition-colors">
+                  <h2 className="text-lg font-black uppercase tracking-tighter flex items-center gap-2">
+                    <Mail size={18} className="text-blue-500" /> Inbox_Intel
+                  </h2>
+                </Link>
                 <Badge variant="outline">Live</Badge>
               </div>
               <div className="space-y-3">
@@ -535,12 +430,13 @@ export default function MissionControl() {
               </div>
             </div>
 
-            {/* Social Intel - WhatsApp */}
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-black uppercase tracking-tighter flex items-center gap-2">
-                  <MessageCircle size={18} className="text-emerald-500" /> Social_Intel
-                </h2>
+                <Link href="/inbox" className="flex items-center gap-2 hover:text-primary transition-colors">
+                  <h2 className="text-lg font-black uppercase tracking-tighter flex items-center gap-2">
+                    <MessageCircle size={18} className="text-emerald-500" /> Social_Intel
+                  </h2>
+                </Link>
                 <Badge variant="outline">WhatsApp</Badge>
               </div>
               {isLoadingWhatsApp ? (
@@ -578,10 +474,10 @@ export default function MissionControl() {
               )}
             </div>
 
-            {/* Barça Section */}
             <motion.div 
               className="relative group bg-blue-600/5 border border-blue-500/20 p-8 overflow-hidden cursor-pointer"
               whileHover={{ y: -4 }}
+              onClick={() => window.location.href = '/sports'}
             >
               <motion.div 
                 className="absolute top-0 right-0 -mr-12 -mt-12 w-32 h-32 bg-blue-600/20 blur-3xl rounded-full"
@@ -604,7 +500,6 @@ export default function MissionControl() {
               </div>
             </motion.div>
 
-            {/* Hardware Monitor */}
             <div className="bg-zinc-900/40 border border-zinc-800 p-8 space-y-6">
                <div className="flex items-center gap-2 text-zinc-400">
                   <Cpu size={20} />
@@ -643,7 +538,6 @@ export default function MissionControl() {
           </div>
         </section>
 
-        {/* Footer */}
         <footer className="px-6 py-12 border-t border-zinc-900 bg-black/40 backdrop-blur-xl">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 text-[10px] text-zinc-600 font-bold tracking-[0.3em] uppercase">
             <div className="flex flex-wrap justify-center gap-8">
@@ -671,7 +565,6 @@ export default function MissionControl() {
         </footer>
       </div>
 
-      {/* Project Modal */}
       <Modal
         isOpen={isProjectModalOpen}
         onClose={() => setIsProjectModalOpen(false)}
@@ -703,7 +596,6 @@ export default function MissionControl() {
         )}
       </Modal>
 
-      {/* Inbox Modal */}
       <Modal
         isOpen={isInboxModalOpen}
         onClose={() => setIsInboxModalOpen(false)}
