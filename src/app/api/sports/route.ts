@@ -116,12 +116,22 @@ export async function GET() {
 
     // Separate finished and upcoming
     const upcomingFixtures = barcelonaMatches
-      .filter(m => m.status !== 'finished' || m.rawDate > new Date(Date.now() - 12 * 60 * 60 * 1000))
+      .filter(m => m.status !== 'finished' || m.rawDate > new Date(Date.now() - 2 * 60 * 60 * 1000)) // Only keep finished if it was in the last 2 hours
       .sort((a, b) => a.rawDate.getTime() - b.rawDate.getTime())
       .slice(0, 5);
 
+    // If all detected matches are finished and none are in the future, 
+    // the dates range might be too narrow. Let's force some future detection logic if empty.
+    if (upcomingFixtures.length > 0 && upcomingFixtures.every(m => m.status === 'finished')) {
+       // Filter again to remove the finished ones if we have others
+       const strictlyUpcoming = upcomingFixtures.filter(m => m.status !== 'finished');
+       if (strictlyUpcoming.length > 0) {
+         // Use those
+       }
+    }
+
     // Get next fixture (the earliest upcoming one)
-    const nextFixture = upcomingFixtures[0] || null;
+    const nextFixture = upcomingFixtures.find(m => m.status !== 'finished') || upcomingFixtures[0] || null;
 
     // Process standings
     const standingsEntries = standingsData.children?.[0]?.standings?.entries || [];
