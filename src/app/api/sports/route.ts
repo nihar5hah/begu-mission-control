@@ -69,9 +69,8 @@ export async function GET() {
     // Fetch Barcelona's scoreboard (current/recent matches)
     const scoreboardData = await fetchESPN(`soccer/${LA_LIGA_CODE}/scoreboard`);
     
-    // Fetch Barcelona's team specific scoreboard/schedule (broaden to find next match)
-    // Team ID 83 is Barcelona. Scoreboard shows today, but we can look for specific dates or use scoreboard to find "live"
-    const barcelonaScoreboard = await fetchESPN(`soccer/${LA_LIGA_CODE}/scoreboard?team=${BARCELONA_TEAM_ID}`);
+    // Fetch upcoming matches for the month to ensure we find the next Barcelona match
+    const upcomingMonthScoreboard = await fetchESPN(`soccer/${LA_LIGA_CODE}/scoreboard?dates=20260201-20260228`);
 
     // Fetch La Liga standings - NOTE: Using v2 for standings
     const standingsResponse = await fetch(`https://site.api.espn.com/apis/v2/sports/soccer/${LA_LIGA_CODE}/standings`, {
@@ -83,7 +82,7 @@ export async function GET() {
     // Collect all matches from both sources
     const allEvents: any[] = [
       ...(scoreboardData.events || []),
-      ...(barcelonaScoreboard.events || [])
+      ...(upcomingMonthScoreboard.events || [])
     ];
 
     // Filter for Barcelona matches and format
