@@ -95,22 +95,29 @@ const Terminal = ({ onClear }: { onClear: () => void }) => {
   const [logs, setLogs] = useState<string[]>([]);
   
   useEffect(() => {
-    const messages = [
-      "SYSTEM_BOOT: Begubot v2.4.0 initialized...",
-      "AUTH: User Begu authenticated via Telegram",
-      "SYNC: Inbox Intelligence connected",
-      "INTEL: 4 new actionable items found in Gmail",
-      "CRON: Task auto-reset completed at 00:00 IST",
-      "DEPLOY: Mission Control v1.0.0 pushed to Vercel",
-      "MONITOR: Jetson Nano temperature 42°C (OK)",
-      "MONITOR: Latency 24ms (OPTIMAL)",
-      "NPTEL: Deep Learning Week 4 quiz submitted"
-    ];
-    let i = 0;
-    const interval = setInterval(() => {
-      setLogs(prev => [...prev.slice(-7), messages[i % messages.length]]);
-      i++;
-    }, 3000);
+    const fetchGhostLogs = async () => {
+      try {
+        const response = await fetch('/api/ghost');
+        if (response.ok) {
+          const data = await response.json();
+          const ghostEntries = data.events.flatMap((e: any) => [
+            `ARCHIVE: [${e.date}] Session Sync`,
+            ...e.entries.map((entry: string) => `  ▪ ${entry}`)
+          ]);
+          
+          if (ghostEntries.length > 0) {
+            setLogs(ghostEntries.slice(0, 15));
+          } else {
+            setLogs(["SYSTEM_BOOT: Begubot v2.4.0 initialized...", "SYNC: Project Ghost connected (waiting for logs)"]);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch ghost logs:', error);
+      }
+    };
+
+    fetchGhostLogs();
+    const interval = setInterval(fetchGhostLogs, 60000);
     return () => clearInterval(interval);
   }, []);
 
