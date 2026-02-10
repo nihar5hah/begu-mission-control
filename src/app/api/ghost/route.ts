@@ -36,9 +36,12 @@ export async function GET() {
       
       // Extract bullet points
       const entries: string[] = [];
-      body.split('\n').forEach(line => {
-        if (line.trim().startsWith('- ')) {
-          entries.push(line.replace('- ', '').trim());
+      lines.forEach(line => {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('- ')) {
+          entries.push(trimmed.replace('- ', '').trim());
+        } else if (trimmed.startsWith('* ')) {
+          entries.push(trimmed.replace('* ', '').trim());
         }
       });
 
